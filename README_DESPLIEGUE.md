@@ -11,6 +11,11 @@
    "Create app" -> tu repositorio -> archivo principal `app.py` -> Deploy.
 3. Comparte el enlace que te entrega.
 
+## Archivos de diseño
+- `estilos.css`: todos los colores, tamaños y estilos (paleta, tipografía, tarjetas, pestañas).
+  Los colores están como variables al inicio del archivo (`:root`).
+- `.streamlit/config.toml`: colores base del tema de Streamlit.
+
 ## Notas
 - Los archivos se procesan en memoria; no se guardan en el servidor.
 - Si el repositorio es público, NO subas Excel reales ni configuraciones con datos
