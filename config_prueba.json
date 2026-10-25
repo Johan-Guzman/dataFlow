@@ -1,0 +1,17 @@
+{
+  "_aviso": "CATALOGOS FICTICIOS solo para pruebas. No son los catalogos oficiales.",
+  "valores_validos": {
+    "nivel educativo": ["Bachillerato", "Técnico", "Tecnólogo", "Profesional"],
+    "tipo de documento": ["Cédula de ciudadanía", "Tarjeta de identidad", "Cédula de extranjería", "Pasaporte"],
+    "programa de interés": ["Ingeniería de Sistemas", "Derecho", "Medicina"]
+  },
+  "equivalencias": {
+    "nivel educativo": {},
+    "tipo de documento": {
+      "CC": "Cédula de ciudadanía",
+      "TI": "Tarjeta de identidad",
+      "CE": "Cédula de extranjería"
+    },
+    "programa de interés": {}
+  }
+}
