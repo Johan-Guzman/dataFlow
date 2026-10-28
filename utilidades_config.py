@@ -158,5 +158,27 @@ def convertir_bytes(contenido, nombre, plantilla, cfg):
         r = cp.convertir_a_plantilla(entrada, plantilla, salida, reporte, cfg)
         r["bytes"], r["nombre_salida"] = salida.read_bytes(), salida.name
         r["bytes_reporte"], r["nombre_reporte"] = reporte.read_bytes(), reporte.name
+        # Añadir vista previa del archivo convertido
+        try:
+            from openpyxl import load_workbook
+            import pandas as pd
+            wb_prev = load_workbook(salida)
+            ws_prev = wb_prev.worksheets[0]
+            cab = [c.value for c in ws_prev[1]]
+            datos = []
+            for i in range(2, min(ws_prev.max_row + 1, 102)):  # limitar vista previa
+                fila_d = {}
+                for j, h in enumerate(cab):
+                    fila_d[h] = ws_prev.cell(row=i, column=j + 1).value
+                datos.append(fila_d)
+            r["preview_df"] = datos
+            r["preview_headers"] = cab
+            r["archivo_origen"] = entrada_nombre
+            r["registros_detectados"] = r.get("filas_origen", len(datos))
+            r["registros_exportar"] = r.get("filas_salida", len(datos))
+            # Mapeo origen->destino
+            r["mapeo_origen_destino"] = [{"origen": m.get("origen"), "destino": m.get("destino"), "regla": m.get("regla")} for m in getattr(cfg, "mapeo", [])]
+        except Exception:
+            pass
     del r["salida"], r["salida_reporte"]
     return r
