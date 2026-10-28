@@ -5,6 +5,7 @@ import tempfile
 from pathlib import Path
 
 import automatizacion_excel as ae
+import convertir_plantilla as cp
 
 COLUMNAS_CATALOGO = [
     ("nivel", "Nivel educativo"),
@@ -62,7 +63,12 @@ def estado_desde_cfg(cfg):
         anio_max=int(cfg.anio_max),
         leer_hoja=bool(cfg.leer_catalogos_desde_hoja),
         reg_validos=bool(cfg.registrar_validos),
+        per_permitidos="\n".join(cfg.periodos_permitidos),
+        per_sufijos=pares_a_texto(cfg.periodo_sufijos),
+        mapeo=[dict(m) for m in cfg.mapeo],
     )
+    for i, m in enumerate(cfg.mapeo):
+        e[f"map_{i}"] = m.get("origen", "")
     return e
 
 
@@ -71,7 +77,9 @@ def construir_cfg(e):
     cfg = ae.Configuracion()
     nombres = []
     for clave, etiqueta in ENCABEZADOS:
-        valor = str(e[clave]).strip()
+        # En modo plantilla estos campos no se dibujan y Streamlit descarta su estado
+        valor = e.get(clave)
+        valor = str(getattr(cfg, clave) if valor is None else valor).strip()
         if not valor:
             raise ValueError(f"El encabezado «{etiqueta}» no puede estar vacío.")
         setattr(cfg, clave, valor)
@@ -94,6 +102,17 @@ def construir_cfg(e):
         raise ValueError("El año mínimo no puede ser mayor que el máximo.")
     cfg.leer_catalogos_desde_hoja = bool(e["leer_hoja"])
     cfg.registrar_validos = bool(e["reg_validos"])
+
+    # Modo "convertir a plantilla" (opcionales; vacíos en el modo normal)
+    cfg.periodos_permitidos = lineas(str(e.get("per_permitidos", "")))
+    for cod in cfg.periodos_permitidos:
+        if not (cod.isdigit() and len(cod) == 6):
+            raise ValueError(f"Periodos permitidos: «{cod}» debe tener 6 dígitos (ej. 202710).")
+    cfg.periodo_sufijos = parsear_pares(str(e.get("per_sufijos", "")), "Sufijos de periodo")
+    cfg.mapeo = [
+        {**m, "origen": str(e.get(f"map_{i}", m.get("origen", ""))).strip()}
+        for i, m in enumerate(e.get("mapeo", []))
+    ]
     return cfg
 
 
@@ -123,4 +142,21 @@ def procesar_bytes(contenido, nombre, cfg):
         r["bytes"] = Path(r["salida"]).read_bytes()
         r["nombre_salida"] = Path(r["salida"]).name
     del r["salida"]
+    return r
+
+
+def convertir_bytes(contenido, nombre, plantilla, cfg):
+    """Convierte un Excel en memoria a la plantilla. Devuelve archivos listo + reporte (bytes)."""
+    entrada_nombre = Path(nombre).name
+    if Path(entrada_nombre).suffix.lower() not in (".xlsx", ".xlsm"):
+        raise ValueError("Solo se aceptan archivos .xlsx o .xlsm.")
+    with tempfile.TemporaryDirectory() as d:
+        entrada = Path(d) / entrada_nombre
+        entrada.write_bytes(contenido)
+        base = Path(entrada_nombre).stem
+        salida, reporte = Path(d) / f"{base}_importacion.xlsx", Path(d) / f"{base}_reporte.xlsx"
+        r = cp.convertir_a_plantilla(entrada, plantilla, salida, reporte, cfg)
+        r["bytes"], r["nombre_salida"] = salida.read_bytes(), salida.name
+        r["bytes_reporte"], r["nombre_reporte"] = reporte.read_bytes(), reporte.name
+    del r["salida"], r["salida_reporte"]
     return r

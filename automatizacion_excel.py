@@ -137,6 +137,10 @@ class Configuracion:
     anio_max: int = PERIODO_ANIO_MAXIMO
     leer_catalogos_desde_hoja: bool = LEER_CATALOGOS_DESDE_HOJA
     registrar_validos: bool = REGISTRAR_VALIDOS_EN_REPORTE
+    # --- Modo "convertir a plantilla" (ver convertir_plantilla.py) ---
+    mapeo: list = field(default_factory=list)            # [{"destino","origen","regla"}]
+    periodos_permitidos: list = field(default_factory=list)  # ["202710", ...]
+    periodo_sufijos: dict = field(default_factory=dict)  # {"1": "10", "2": "20"}
 
     @property
     def columnas_catalogo(self):
@@ -169,6 +173,7 @@ def normalizar_comparacion(valor):
         return ""
     texto = str(valor).replace("\u00a0", " ").strip().lower()
     texto = texto.replace("_", " ").replace("ñ", "\0")
+    texto = re.sub(r"[,;:.]", " ", texto)  # puntuación sin significado
     texto = unicodedata.normalize("NFKD", texto)
     texto = "".join(c for c in texto if not unicodedata.combining(c))
     texto = texto.replace("\0", "ñ")

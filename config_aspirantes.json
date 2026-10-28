@@ -1,0 +1,192 @@
+{
+  "_aviso": "Catálogos tomados de las capturas y la lista enviadas. Las capturas de nivel educativo y tipo de documento podrían estar cortadas: confirmar que estén completas.",
+  "col_nivel": "nivel educativo",
+  "col_documento": "tipo de documento",
+  "col_programa": "programa de interés",
+  "col_texto": "categoria_servicio",
+  "col_telefono": "telefono",
+  "col_codigo_pais": "Codigo_Pais",
+  "col_periodo": "periodo",
+  "valores_validos": {
+    "nivel educativo": [
+      "Técnico",
+      "Tecnólogo",
+      "Profesional",
+      "Especialista",
+      "Magíster",
+      "Doctor"
+    ],
+    "tipo de documento": [
+      "CC - Cédula de ciudadanía",
+      "CE - Cédula de extranjería",
+      "RC - Registro Civil",
+      "NI - NIT",
+      "NP - Número identifiación personal",
+      "UN - NUIP"
+    ],
+    "programa de interés": [
+      "Especialización en Administración en Salud",
+      "Especialización en Business Analytics",
+      "Especialización en Cadena de Suministro y Operaciones Digitales",
+      "Especialización en Contratación en Entornos Digitales",
+      "Especialización en Customer Experience",
+      "Especialización en Derecho",
+      "Especialización en Derecho de Daños",
+      "Especialización en Derecho Empresarial",
+      "Especialización en Derecho Laboral y de la Seguridad Social",
+      "Especialización en Derecho Procesal",
+      "Especialización en Derecho Público",
+      "Especialización en Desarrollo Infantil y Educación Inicial",
+      "Especialización en Docencia Universitaria",
+      "Especialización en Evaluación de Impacto",
+      "Especialización en Finanzas",
+      "Especialización en Gerencia Comercial",
+      "Especialización en Gestión de la Innovación",
+      "Especialización en Ingeniería de Datos",
+      "Especialización en Inteligencia Artificial Aplicada",
+      "Especialización en Legislación Laboral y de la Seguridad Social para no Abogados",
+      "Especialización en Marketing Digital & E-Commerce",
+      "Especialización en Narrativas Digitales",
+      "Especialización en Neurociencia Cognitiva del Envejecimiento",
+      "Especialización en Operaciones de Ciberseguridad",
+      "Maestría en Atención Integral a la Primera Infancia",
+      "Maestría en Biotecnología",
+      "Maestría en Ciberseguridad",
+      "Maestría en Ciencias Administrativas",
+      "Maestría en Ciencias de Datos",
+      "Maestría en Ciencias-Biotecnología",
+      "Maestría en Creación de Experiencias Digitales UX",
+      "Maestría en Creación Literaria y Narrativas Digitales",
+      "Maestría en Derecho en modalidad de profundización",
+      "Maestría en Discapacidad Salud y Derechos Humanos",
+      "Maestría en Economía en modalidad Investigación",
+      "Maestría en Educación Mediada por las TIC",
+      "Maestría en Educación Presencial",
+      "Maestría en Educación Virtual",
+      "Maestría en Epidemiología Clínica",
+      "Maestría en Estrategia Digital de Negocios",
+      "Maestría en Finanzas Cuantitativas",
+      "Maestría en Gerencia de Proyectos",
+      "Maestría en Gerencia de Tecnologías de Información",
+      "Maestría en Gerencia en Salud",
+      "Maestría en Gerencia Financiera",
+      "Maestría en Gerencia para la Innovación Social",
+      "Maestría en Gestión de la Innovación",
+      "Maestría en Gestión del Talento Humano",
+      "Maestría en Gestión Empresarial",
+      "Maestría en Gestión en Cadena de Suministros",
+      "Maestría en Gobierno y Políticas Públicas",
+      "Maestría en Innovación Educativa",
+      "Maestría en Inteligencia Artificial Aplicada",
+      "Maestría en Mercadeo",
+      "Maestría en Sostenibilidad",
+      "Master's in Teaching English as a Foreign Language",
+      "MBA Icesi",
+      "Doctorado en Ciencias Económicas y Administrativas",
+      "Doctorado en Ingeniería",
+      "Programa de Educación Continua",
+      "Especializaciones Médico Quirúrgicas",
+      "Otro"
+    ]
+  },
+  "equivalencias": {
+    "nivel educativo": {},
+    "tipo de documento": {},
+    "programa de interés": {}
+  },
+  "periodos": {
+    "10": "Primer Semestre",
+    "20": "Segundo Semestre"
+  },
+  "periodos_permitidos": [
+    "202710",
+    "202720",
+    "202810",
+    "202820"
+  ],
+  "periodo_sufijos": {
+    "1": "10",
+    "2": "20"
+  },
+  "anio_min": 2000,
+  "anio_max": 2100,
+  "leer_catalogos_desde_hoja": false,
+  "registrar_validos": false,
+  "mapeo": [
+    {
+      "destino": "Nombre",
+      "origen": "first_name",
+      "regla": "texto"
+    },
+    {
+      "destino": "Apellido",
+      "origen": "last_name",
+      "regla": "texto"
+    },
+    {
+      "destino": "Correo electrónico",
+      "origen": "email",
+      "regla": "correo"
+    },
+    {
+      "destino": "Código de país",
+      "origen": "phone_number",
+      "regla": "telefono_codigo"
+    },
+    {
+      "destino": "Número de teléfono",
+      "origen": "phone_number",
+      "regla": "telefono_numero"
+    },
+    {
+      "destino": "Ciudad de residencia",
+      "origen": "city",
+      "regla": "texto"
+    },
+    {
+      "destino": "Nivel educativo",
+      "origen": "Nivel de estudios",
+      "regla": "nivel"
+    },
+    {
+      "destino": "Tipo de documento",
+      "origen": "tipo_de_documento",
+      "regla": "documento"
+    },
+    {
+      "destino": "Número de documento",
+      "origen": "número_de_documento",
+      "regla": "numero_documento"
+    },
+    {
+      "destino": "Empresa",
+      "origen": "nombre_de_la_empresa",
+      "regla": "texto"
+    },
+    {
+      "destino": "Programa de interés",
+      "origen": "¿cuál_es_tu_posgrado_de_interés?",
+      "regla": "programa"
+    },
+    {
+      "destino": "¿En qué semestre te interesaría iniciar el Programa?",
+      "origen": "Periodo de interes",
+      "regla": "periodo"
+    }
+  ],
+  "_propuestas_sin_confirmar": {
+    "_nota": "NO se aplican. Pásalas a 'equivalencias' solo cuando las confirmes.",
+    "nivel educativo": {
+      "especialización": "Especialista",
+      "maestría": "Magíster"
+    },
+    "programa de interés": {
+      "maestría_en_derecho_profundización": "Maestría en Derecho en modalidad de profundización",
+      "especialidades_médico-quirúrgicas": "Especializaciones Médico Quirúrgicas",
+      "maestría_en_economía": "Maestría en Economía en modalidad Investigación",
+      "maestría_en_ciencia_de_datos": "Maestría en Ciencias de Datos",
+      "maestría_en_gerencia_para_la_innovación_social_-_virtual": "Maestría en Gerencia para la Innovación Social",
+      "maestría_en_gerencia_para_la_innovación_social_-_presencial": "Maestría en Gerencia para la Innovación Social"
+    }
+  }
+}

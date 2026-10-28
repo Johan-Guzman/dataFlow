@@ -40,3 +40,34 @@ def test_app_se_renderiza_y_valida():
     # configuración válida editada desde la interfaz
     app.text_area(key="eq_documento").set_value("CC = Cédula de ciudadanía").run()
     assert not app.error and not app.exception
+
+
+def test_convertir_bytes_y_perfil():
+    ae_ = ae
+    cfg = ae_.cargar_configuracion_json(Path(__file__).parent / "config_aspirantes.json")
+    cfg2 = uc.construir_cfg(uc.estado_desde_cfg(cfg))
+    assert cfg2.mapeo == cfg.mapeo and cfg2.periodos_permitidos == cfg.periodos_permitidos
+    guia = Path(__file__).parent / "guia_anonimizada.xlsx"
+    r = uc.convertir_bytes(guia.read_bytes(), "guia.xlsx",
+                           Path(__file__).parent / "plantilla_importacion_Aspirante.xlsx", cfg2)
+    assert r["filas_salida"] == 26 and r["nombre_salida"] == "guia_importacion.xlsx"
+    assert r["bytes"][:2] == b"PK" and r["bytes_reporte"][:2] == b"PK"
+
+
+def test_app_modo_plantilla():
+    at_mod = pytest.importorskip("streamlit.testing.v1")
+    app = at_mod.AppTest.from_file("app.py", default_timeout=30).run()
+    app.radio(key="modo").set_value("Convertir a plantilla de importación").run()
+    assert not app.exception and not app.error
+    assert len([t for t in app.text_input if t.key and t.key.startswith("map_")]) == 12
+    app.text_input(key="map_0").set_value("").run()  # mapeo vacío no rompe la app
+    assert not app.exception
+
+
+def test_construir_cfg_sin_campos_de_columnas():
+    """En modo plantilla Streamlit descarta col_*: debe usar los valores por defecto."""
+    cfg = ae.cargar_configuracion_json(Path(__file__).parent / "config_aspirantes.json")
+    estado = uc.estado_desde_cfg(cfg)
+    for clave, _ in uc.ENCABEZADOS:
+        estado.pop(clave)
+    assert uc.construir_cfg(estado).col_nivel == "nivel educativo"

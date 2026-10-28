@@ -9,7 +9,7 @@ import streamlit as st
 import automatizacion_excel as ae
 from utilidades_config import (
     COLUMNAS_CATALOGO, ENCABEZADOS, cfg_a_json, cfg_desde_json_bytes,
-    construir_cfg, estado_desde_cfg, procesar_bytes,
+    construir_cfg, convertir_bytes, estado_desde_cfg, procesar_bytes,
 )
 
 st.set_page_config(page_title="Normalizador de Excel", page_icon=":material/table_chart:", layout="wide")
@@ -17,6 +17,11 @@ st.markdown(f"<style>{(Path(__file__).with_name('estilos.css')).read_text(encodi
             unsafe_allow_html=True)
 
 ss = st.session_state
+
+MODOS = ["Normalizar el mismo archivo", "Convertir a plantilla de importación"]
+AQUI = Path(__file__).parent
+PERFIL_PLANTILLA = AQUI / "config_aspirantes.json"
+ARCHIVO_PLANTILLA = AQUI / "plantilla_importacion_Aspirante.xlsx"
 
 # ------------------------------ iconos y piezas visuales ------------------------------
 _SVG = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{w}" '
@@ -71,7 +76,16 @@ def volcar(cfg):
 
 if "iniciado" not in ss:
     volcar(ae.Configuracion())
+    ss.modo = MODOS[0]
     ss.iniciado = True
+
+
+def _al_cambiar_modo():
+    ss.pop("resultado", None)
+    ss.pop("error_proc", None)
+    volcar(ae.cargar_configuracion_json(PERFIL_PLANTILLA) if ss.modo == MODOS[1] else ae.Configuracion())
+    ss.cfg_msg = ("ok", "Se cargó el perfil de la plantilla de aspirantes." if ss.modo == MODOS[1]
+                  else "Se restablecieron los valores por defecto.")
 
 
 def _al_cargar_config():
@@ -133,6 +147,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+st.radio("Modo", MODOS, key="modo", horizontal=True, on_change=_al_cambiar_modo,
+         label_visibility="collapsed")
+es_plantilla = ss.modo == MODOS[1]
+
 s1 = archivo is not None
 s2 = cfg_ok
 s3 = r is not None
@@ -162,12 +180,21 @@ t_col, t_cat, t_per, t_run = st.tabs([
 ])
 
 with t_col:
-    seccion("Encabezados de las columnas",
-            "Escribe el encabezado (fila 1) de cada columna. Se ignoran mayúsculas, tildes, espacios y «_».")
-    with st.container(border=True, key="card_columnas"):
-        c1, c2 = st.columns(2)
-        for i, (clave, etiqueta) in enumerate(ENCABEZADOS):
-            (c1 if i % 2 == 0 else c2).text_input(f":material/{ICONO_CAMPO[clave]}: {etiqueta}", key=clave)
+    if es_plantilla:
+        seccion("Mapeo de columnas",
+                "Para cada columna de la plantilla, escribe el encabezado de tu archivo que la alimenta.")
+        with st.container(border=True, key="card_mapeo"):
+            m1, m2 = st.columns(2)
+            for i, m in enumerate(ss.get("mapeo", [])):
+                (m1 if i % 2 == 0 else m2).text_input(m["destino"].strip(), key=f"map_{i}",
+                                                      help=f"Regla aplicada: {m['regla']}")
+    else:
+        seccion("Encabezados de las columnas",
+                "Escribe el encabezado (fila 1) de cada columna. Se ignoran mayúsculas, tildes, espacios y «_».")
+        with st.container(border=True, key="card_columnas"):
+            c1, c2 = st.columns(2)
+            for i, (clave, etiqueta) in enumerate(ENCABEZADOS):
+                (c1 if i % 2 == 0 else c2).text_input(f":material/{ICONO_CAMPO[clave]}: {etiqueta}", key=clave)
 
 with t_cat:
     seccion("Catálogos y equivalencias",
@@ -194,6 +221,13 @@ with t_per:
         a.text_area("Códigos y descripciones", key="periodos", height=150, placeholder="10 = Primer Semestre")
         b.number_input("Año mínimo válido", key="anio_min", step=1)
         b.number_input("Año máximo válido", key="anio_max", step=1)
+    if es_plantilla:
+        with st.container(border=True, key="card_periodos_extra"):
+            p1, p2 = st.columns(2)
+            p1.text_area("Periodos permitidos (uno por línea)", key="per_permitidos", height=120,
+                         placeholder="202710", help="Si se define, cualquier otro periodo va a revisión.")
+            p2.text_area("Formato alterno (sufijo = código)", key="per_sufijos", height=120,
+                         placeholder="1 = 10", help="Permite leer «2027-1» como 202710.")
 
 with t_run:
     with st.expander("Verificación previa", expanded=ss.get("resultado") is None, icon=":material/fact_check:"):
@@ -210,7 +244,8 @@ with t_run:
                  disabled=not (cfg_ok and archivo), use_container_width=True):
         try:
             with st.spinner("Procesando…"):
-                ss.resultado = procesar_bytes(archivo.getvalue(), archivo.name, cfg)
+                ss.resultado = (convertir_bytes(archivo.getvalue(), archivo.name, ARCHIVO_PLANTILLA, cfg)
+                                if es_plantilla else procesar_bytes(archivo.getvalue(), archivo.name, cfg))
             ss.pop("error_proc", None)
         except Exception as e:
             ss.pop("resultado", None)
@@ -222,7 +257,8 @@ with t_run:
     r = ss.get("resultado")
     if r:
         st.divider()
-        seccion("Resultado", f"Archivo generado: <b>{escape(r['nombre_salida'])}</b>")
+        seccion("Resultado", f"Archivo generado: <b>{escape(r['nombre_salida'])}</b>"
+                + (f" · {r['filas_salida']} filas" if "filas_salida" in r else ""))
         res = r["resumen"]
         tarjetas = [("Corregidos", "CORREGIDO", "#5454e9"), ("Válidos", "VALIDO", "#4cb979"),
                     ("Inválidos", "INVALIDO", "#c15a3e"), ("Por revisar", "REQUIERE_REVISION", "#e0a458"),
@@ -234,10 +270,14 @@ with t_run:
         for aviso in r["avisos"]:
             st.warning(aviso, icon=":material/warning:")
         st.download_button(
-            "Descargar Excel corregido", r["bytes"], r["nombre_salida"],
+            "Descargar archivo para importar" if es_plantilla else "Descargar Excel corregido", r["bytes"], r["nombre_salida"],
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             type="primary", icon=":material/download:", use_container_width=True,
         )
+        if r.get("bytes_reporte"):
+            st.download_button("Descargar reporte de auditoría", r["bytes_reporte"], r["nombre_reporte"],
+                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                               icon=":material/fact_check:", use_container_width=True)
         df = pd.DataFrame(r["reporte"])
         if df.empty:
             st.info("No hubo cambios ni inconsistencias.", icon=":material/info:")

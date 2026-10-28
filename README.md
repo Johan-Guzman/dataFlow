@@ -33,6 +33,10 @@ El archivo original nunca se modifica: se genera un archivo nuevo con una hoja d
 app.py                      Aplicación web (Streamlit)
 estilos.css                 Diseño de la app (paleta, tipografía, tarjetas)
 automatizacion_excel.py     Motor de normalización y línea de comandos
+convertir_plantilla.py      Conversión a la plantilla de importación
+config_aspirantes.json      Catálogos y mapeo del perfil de aspirantes
+plantilla_importacion_Aspirante.xlsx  Plantilla destino
+guia_anonimizada.xlsx       Archivo de ejemplo anonimizado (pruebas)
 utilidades_config.py        Lógica compartida por las interfaces
 interfaz_automatizacion.py  Ventana de escritorio opcional (Tkinter)
 config_prueba.json          Catálogos FICTICIOS para probar
@@ -84,6 +88,34 @@ python interfaz_automatizacion.py
 ```
 
 Requiere Tkinter (incluido en Python; en algunas instalaciones de Linux: `sudo apt install python3-tk`).
+
+---
+
+## Modo «Convertir a plantilla de importación»
+
+Pensado para exportaciones de formularios (p. ej. Meta Lead Ads) que deben dejarse con la estructura exacta de `plantilla_importacion_Aspirante.xlsx`.
+
+**Qué hace**
+- Lee el archivo sucio, mapea cada columna a la de la plantilla (configurable) y genera **dos archivos**: el de importación (solo la hoja de datos, sin hojas extra) y un reporte de auditoría aparte.
+- Valida nivel educativo, tipo de documento, programa y periodo contra los catálogos de `config_aspirantes.json`.
+- Separa el `+57` del teléfono conservando ceros, convierte el número de documento a texto y limpia espacios.
+- Los valores que no coinciden con el catálogo **se conservan y se resaltan** en la celda (ámbar = revisar, rojo = inválido) y quedan en el reporte. Nada se inventa.
+- No se eliminan filas; solo se omiten las filas totalmente vacías.
+
+**Uso**
+```bash
+python convertir_plantilla.py --entrada archivo_sucio.xlsx --plantilla plantilla_importacion_Aspirante.xlsx \
+    --config config_aspirantes.json --salida importacion_lista.xlsx --reporte importacion_reporte.xlsx
+```
+En la app web, elige el modo en la parte superior; se carga el perfil de aspirantes y el mapeo se edita en la pestaña *Columnas*.
+
+**Mapeo y reglas** (campo `mapeo` del JSON): `texto`, `correo`, `numero_documento`, `telefono_codigo`, `telefono_numero`, `nivel`, `documento`, `programa`, `periodo`.
+
+**Periodos:** `periodos_permitidos` limita los valores válidos (p. ej. `202710`, `202720`, `202810`, `202820`) y `periodo_sufijos` permite leer `2027-1` como `202710`. Un periodo fuera de la lista se conserva y va a revisión.
+
+**Equivalencias pendientes:** `config_aspirantes.json` trae, en `_propuestas_sin_confirmar`, equivalencias *sugeridas* (p. ej. `especialización` → `Especialista`) que **no se aplican** hasta que las confirmes y las muevas a `equivalencias`.
+
+> Los catálogos de nivel educativo y tipo de documento provienen de capturas de pantalla que podrían estar incompletas; confirma que las listas estén completas.
 
 ---
 
@@ -159,6 +191,12 @@ pytest
 Las pruebas usan datos ficticios y cubren los casos de normalización, los casos límite (vacíos, `+57` solo, código de país en conflicto, periodos no configurados), que no se eliminen filas, que las columnas ajenas y las fórmulas queden intactas, y que el original no cambie. Las pruebas de la ventana de escritorio se omiten si no hay Tkinter o pantalla.
 
 ---
+
+## Despliegue gratuito (Streamlit Community Cloud)
+
+1. Sube **todo** el contenido de esta carpeta (incluida `.streamlit/`) a un repositorio de GitHub.
+2. Entra a <https://share.streamlit.io>, inicia sesión con GitHub y elige *Create app*.
+3. Selecciona el repositorio y como archivo principal `app.py`, y pulsa *Deploy*.
 
 ### Privacidad
 - Los archivos se procesan **en memoria** y no se guardan en el servidor.
